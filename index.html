@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Охота на Демонов</title>
+    <style>
+        :root {
+            --primary-color: #ff3333;
+            --bg-overlay: rgba(20, 5, 5, 0.85);
+            --cell-size: 45px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace;
+            background-image: url('bg.jpg'); /* Ссылка на твою картинку */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none;
+        }
+
+        .header {
+            background: var(--bg-overlay);
+            padding: 20px 40px;
+            border-bottom: 2px solid var(--primary-color);
+            border-radius: 0 0 15px 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 0 20px var(--primary-color);
+        }
+
+        h1 {
+            margin: 0 0 10px 0;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px #ff0000;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            gap: 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(10, var(--cell-size));
+            grid-template-rows: repeat(10, var(--cell-size));
+            gap: 2px;
+            background: #000;
+            padding: 4px;
+            border: 3px solid #551111;
+            border-radius: 5px;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.3);
+        }
+
+        .cell {
+            background: rgba(40, 10, 10, 0.8);
+            border: 1px solid #441111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .cell:hover {
+            background: rgba(100, 20, 20, 0.8);
+            box-shadow: inset 0 0 10px var(--primary-color);
+        }
+
+        .cell.seal {
+            background: rgba(80, 0, 0, 0.9);
+            box-shadow: inset 0 0 15px #ff0000;
+            text-shadow: 0 0 10px #ff0000;
+        }
+
+        /* Анимации и стили после проверки */
+        .cell.hit {
+            background: rgba(255, 50, 0, 0.3);
+            animation: shake 0.4s ease-in-out;
+            border-color: #ffaa00;
+            box-shadow: inset 0 0 20px #ffaa00;
+        }
+
+        .cell.miss {
+            background: rgba(30, 30, 30, 0.9);
+            color: #555;
+        }
+
+        .cell.revealed-demon {
+            background: rgba(100, 0, 0, 0.5);
+            opacity: 0.5;
+        }
+
+        .controls {
+            margin-top: 25px;
+            display: flex;
+            gap: 20px;
+        }
+
+        button {
+            background: #330000;
+            color: #ffdddd;
+            border: 2px solid var(--primary-color);
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            text-transform: uppercase;
+            transition: 0.3s;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+        }
+
+        button:hover:not(:disabled) {
+            background: var(--primary-color);
+            color: #000;
+            box-shadow: 0 0 20px var(--primary-color);
+        }
+
+        button:disabled {
+            border-color: #555;
+            color: #555;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #message {
+            margin-top: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffaa00;
+            text-shadow: 0 0 5px #000;
+            height: 25px;
+        }
+
+        @keyframes shake {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Охота на Демонов</h1>
+        <div class="stats">
+            <div>Очки: <span id="score">0</span></div>
+            <div>Печатей: <span id="traps">25</span></div>
+        </div>
+    </div>
+
+    <div class="board" id="board"></div>
+
+    <div id="message">Расставь демонические печати...</div>
+
+    <div class="controls">
+        <button id="checkBtn" onclick="checkTraps()">Проверить!</button>
+        <button id="restartBtn" onclick="initGame()" style="display: none;">Новая игра</button>
+    </div>
+
+    <script>
+        const boardSize = 10;
+        let board = [];
+        let traps = [];
+        let maxTraps = 25;
+        let score = 0;
+        let gamePhase = 'placement'; // 'placement' или 'revealed'
+        
+        // Размеры демонов (как корабли: 1шт - 4х, 2шт - 3х, 3шт - 2х, 4шт - 1х)
+        const demonSizes = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1];
+
+        const boardElement = document.getElementById('board');
+        const trapsElement = document.getElementById('traps');
+        const scoreElement = document.getElementById('score');
+        const messageElement = document.getElementById('message');
+        const checkBtn = document.getElementById('checkBtn');
+        const restartBtn = document.getElementById('restartBtn');
+
+        function initGame() {
+            board = Array(boardSize * boardSize).fill(0);
+            traps = [];
+            score = 0;
+            gamePhase = 'placement';
+            
+            trapsElement.innerText = maxTraps;
+            scoreElement.innerText = score;
+            messageElement.innerText = "Расставь демонические печати...";
+            checkBtn.style.display = "block";
+            checkBtn.disabled = true; // Выключена, пока нет печатей
+            restartBtn.style.display = "none";
+            
+            boardElement.innerHTML = '';
+            
+            // Создаем поле
+            for (let i = 0; i < boardSize * boardSize; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.dataset.index = i;
+                cell.addEventListener('click', () => toggleTrap(i));
+                boardElement.appendChild(cell);
+            }
+
+            placeDemons();
+        }
+
+        // Проверка, можно ли поставить демона (чтобы они не соприкасались)
+        function canPlace(index, size, isHorizontal) {
+            let row = Math.floor(index / boardSize);
+            let col = index % boardSize;
+
+            if (isHorizontal && col + size > boardSize) return false;
+            if (!isHorizontal && row + size > boardSize) return false;
+
+            // Проверяем сами клетки и клетки вокруг (правило Морского боя)
+            for (let i = 0; i < size; i++) {
+                let r = row + (isHorizontal ? 0 : i);
+                let c = col + (isHorizontal ? i : 0);
+
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        let nr = r + dr;
+                        let nc = c + dc;
+                        if (nr >= 0 && nr < boardSize && nc >= 0 && nc < boardSize) {
+                            if (board[nr * boardSize + nc] === 1) return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+
+        // Случайная генерация врагов
+        function placeDemons() {
+            demonSizes.forEach(size => {
+                let placed = false;
+                while (!placed) {
+                    let isHorizontal = Math.random() > 0.5;
+                    let index = Math.floor(Math.random() * (boardSize * boardSize));
+                    
+                    if (canPlace(index, size, isHorizontal)) {
+                        let row = Math.floor(index / boardSize);
+                        let col = index % boardSize;
+                        for (let i = 0; i < size; i++) {
+                            let r = row + (isHorizontal ? 0 : i);
+                            let c = col + (isHorizontal ? i : 0);
+                            board[r * boardSize + c] = 1;
+                        }
+                        placed = true;
+                    }
+                }
+            });
+        }
+
+        // Установка/Снятие печати
+        function toggleTrap(index) {
+            if (gamePhase !== 'placement') return;
+
+            const cell = boardElement.children[index];
+            const trapIndex = traps.indexOf(index);
+
+            if (trapIndex > -1) {
+                // Убираем печать
+                traps.splice(trapIndex, 1);
+                cell.classList.remove('seal');
+                cell.innerText = "";
+            } else {
+                // Ставим печать, если есть лимит
+                if (traps.length < maxTraps) {
+                    traps.push(index);
+                    cell.classList.add('seal');
+                    cell.innerText = "⛧"; // Символ печати
+                } else {
+                    messageElement.innerText = "У тебя больше нет печатей!";
+                    setTimeout(() => messageElement.innerText = "Расставь демонические печати...", 1500);
+                }
+            }
+
+            trapsElement.innerText = maxTraps - traps.length;
+            checkBtn.disabled = traps.length === 0;
+        }
+
+        // Нажатие кнопки "Проверить"
+        function checkTraps() {
+            if (gamePhase !== 'placement' || traps.length === 0) return;
+            gamePhase = 'revealed';
+            
+            let hits = 0;
+
+            // Обрабатываем каждую ловушку
+            traps.forEach(index => {
+                const cell = boardElement.children[index];
+                if (board[index] === 1) {
+                    cell.classList.add('hit');
+                    cell.classList.remove('seal');
+                    cell.innerText = "👹"; // Пойманный демон
+                    score += 100;
+                    hits++;
+                    board[index] = 2; // Помечаем как уничтоженного
+                } else {
+                    cell.classList.add('miss');
+                    cell.classList.remove('seal');
+                    cell.innerText = "💨"; // Промах (дым)
+                }
+            });
+
+            // Показываем ненайденных демонов (тускло)
+            for (let i = 0; i < boardSize * boardSize; i++) {
+                if (board[i] === 1) {
+                    const cell = boardElement.children[i];
+                    cell.classList.add('revealed-demon');
+                    cell.innerText = "👿"; // Скрывавшийся демон
+                }
+            }
+
+            scoreElement.innerText = score;
+            
+            if (hits > 0) {
+                messageElement.innerText = `Печати сработали! Уничтожено демонов: ${hits}`;
+                messageElement.style.color = "#ffaa00";
+            } else {
+                messageElement.innerText = "Печати сгорели впустую... Никто не пойман.";
+                messageElement.style.color = "#888";
+            }
+
+            checkBtn.style.display = "none";
+            restartBtn.style.display = "block";
+        }
+
+        // Запуск при загрузке
+        window.onload = initGame;
+    </script>
+</body>
+</html>
