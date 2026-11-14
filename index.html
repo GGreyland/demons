@@ -29,35 +29,43 @@
 
         .header {
             background: var(--bg-overlay);
-            padding: 20px 40px;
+            padding: 15px 20px;
             border-bottom: 2px solid var(--primary-color);
             border-radius: 0 0 15px 15px;
             text-align: center;
             margin-bottom: 20px;
             box-shadow: 0 0 20px var(--primary-color);
-            width: 500px;
+            width: 470px;
+            max-width: 95vw;
+            box-sizing: border-box;
         }
 
         h1 {
             margin: 0 0 15px 0;
             color: var(--primary-color);
             text-transform: uppercase;
-            letter-spacing: 3px;
+            letter-spacing: 2px;
             text-shadow: 0 0 10px #ff0000;
+            font-size: 1.6rem;
         }
 
         .stats {
             display: flex;
             justify-content: space-between;
-            font-size: 1.1rem;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
             font-weight: bold;
         }
 
         .stat-box {
-            background: rgba(0, 0, 0, 0.5);
-            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 8px 6px;
             border-radius: 5px;
             border: 1px solid #551111;
+            white-space: nowrap; /* Запрет переноса текста на новую строку */
+            flex: 1;
+            text-align: center;
         }
 
         .board {
@@ -151,11 +159,12 @@
 
         #message {
             margin-top: 15px;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: bold;
             color: #fff;
             text-shadow: 0 0 5px #000;
             height: 25px;
+            text-align: center;
         }
 
         @keyframes shake {
@@ -170,8 +179,8 @@
     <div class="header">
         <h1>Охота на Демонов</h1>
         <div class="stats">
-            <div class="stat-box">Раунд: <span id="round">1</span> / 3</div>
-            <div class="stat-box" style="color: #ffaa00;">Поймано: <span id="caught">0</span> / 20</div>
+            <div class="stat-box">Раунд: <span id="round">1</span>/3</div>
+            <div class="stat-box" style="color: #ffaa00;">Поймано: <span id="caught">0</span>/20</div>
             <div class="stat-box">Печатей: <span id="traps">25</span></div>
         </div>
     </div>
@@ -187,13 +196,13 @@
 
     <script>
         const boardSize = 10;
-        let board = []; // Состояния: 0 - пусто, 1 - демон, 2 - убит, 3 - промах
+        let board = []; 
         
         let availableTraps = 25;
-        let roundTraps = []; // Индексы печатей, поставленных в ТЕКУЩЕМ раунде
+        let roundTraps = []; 
         let currentRound = 1;
         let demonsCaught = 0;
-        const totalDemons = 20; // Сумма всех клеток демонов (4+3+3+2+2+2+1+1+1+1)
+        const totalDemons = 20; 
         let isGameOver = false;
         
         const demonSizes = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1];
@@ -280,23 +289,19 @@
             });
         }
 
-        // Ставим или убираем печать в ТЕКУЩЕМ раунде
         function toggleTrap(index) {
             if (isGameOver) return;
-            // Нельзя ставить на уже проверенные клетки
             if (board[index] === 2 || board[index] === 3) return;
 
             const cell = boardElement.children[index];
             const trapIndex = roundTraps.indexOf(index);
 
             if (trapIndex > -1) {
-                // Убираем неиспользованную печать
                 roundTraps.splice(trapIndex, 1);
                 availableTraps++;
                 cell.classList.remove('seal');
                 cell.innerText = "";
             } else {
-                // Ставим печать, если они еще есть
                 if (availableTraps > 0) {
                     roundTraps.push(index);
                     availableTraps--;
@@ -318,47 +323,42 @@
             checkBtn.disabled = roundTraps.length === 0;
         }
 
-        // Проверка поставленных печатей
         function checkTraps() {
             if (isGameOver || roundTraps.length === 0) return;
             
             let hitsThisRound = 0;
 
-            // Обрабатываем только те печати, которые поставили в этом раунде
             roundTraps.forEach(index => {
                 const cell = boardElement.children[index];
                 if (board[index] === 1) {
-                    board[index] = 2; // Убит
+                    board[index] = 2;
                     cell.classList.remove('seal');
                     cell.classList.add('hit');
                     cell.innerText = "👹";
                     demonsCaught++;
                     hitsThisRound++;
                 } else {
-                    board[index] = 3; // Промах
+                    board[index] = 3;
                     cell.classList.remove('seal');
                     cell.classList.add('miss');
                     cell.innerText = "💨";
                 }
             });
 
-            // Очищаем массив текущего раунда
             roundTraps = [];
             currentRound++;
             updateUI();
 
-            // Проверяем условия окончания игры
             if (demonsCaught === totalDemons) {
                 endGame("Победа! Все демоны изгнаны досрочно!", "#00ff00");
             } else if (currentRound > 3) {
-                endGame(`Игра окончена! Ты поймал ${demonsCaught} из ${totalDemons} демонов.`, "#ffaa00");
+                endGame(`Игра окончена! Поймано ${demonsCaught} из ${totalDemons} демонов.`, "#ffaa00");
             } else if (availableTraps === 0) {
-                endGame(`Печати закончились! Ты поймал ${demonsCaught} из ${totalDemons}.`, "#ffaa00");
+                endGame(`Печати закончились! Поймано ${demonsCaught} из ${totalDemons}.`, "#ffaa00");
             } else {
-                // Переход к следующему раунду
                 messageElement.innerText = `Попаданий: ${hitsThisRound}. Раунд ${currentRound}. Ставь еще!`;
                 messageElement.style.color = hitsThisRound > 0 ? "#ffaa00" : "#888";
-                checkBtn.disabled = true; // Отключаем кнопку, пока не поставят новые
+                checkBtn.disabled = true;
             }
         }
 
@@ -367,7 +367,6 @@
             messageElement.innerText = message;
             messageElement.style.color = color;
             
-            // Показываем ненайденных демонов
             for (let i = 0; i < boardSize * boardSize; i++) {
                 if (board[i] === 1) {
                     const cell = boardElement.children[i];
