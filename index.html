@@ -15,7 +15,7 @@
             margin: 0;
             padding: 0;
             font-family: 'Courier New', Courier, monospace;
-            background-image: url('bg.jpg'); /* Ссылка на твою картинку */
+            background-image: url('bg.jpg'); 
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -35,10 +35,11 @@
             text-align: center;
             margin-bottom: 20px;
             box-shadow: 0 0 20px var(--primary-color);
+            width: 500px;
         }
 
         h1 {
-            margin: 0 0 10px 0;
+            margin: 0 0 15px 0;
             color: var(--primary-color);
             text-transform: uppercase;
             letter-spacing: 3px;
@@ -48,9 +49,15 @@
         .stats {
             display: flex;
             justify-content: space-between;
-            gap: 30px;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: bold;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid #551111;
         }
 
         .board {
@@ -76,7 +83,7 @@
             transition: all 0.2s;
         }
 
-        .cell:hover {
+        .cell:hover:not(.hit):not(.miss) {
             background: rgba(100, 20, 20, 0.8);
             box-shadow: inset 0 0 10px var(--primary-color);
         }
@@ -87,22 +94,24 @@
             text-shadow: 0 0 10px #ff0000;
         }
 
-        /* Анимации и стили после проверки */
         .cell.hit {
             background: rgba(255, 50, 0, 0.3);
             animation: shake 0.4s ease-in-out;
             border-color: #ffaa00;
             box-shadow: inset 0 0 20px #ffaa00;
+            cursor: default;
         }
 
         .cell.miss {
             background: rgba(30, 30, 30, 0.9);
             color: #555;
+            cursor: default;
         }
 
         .cell.revealed-demon {
             background: rgba(100, 0, 0, 0.5);
             opacity: 0.5;
+            cursor: default;
         }
 
         .controls {
@@ -135,6 +144,7 @@
         button:disabled {
             border-color: #555;
             color: #555;
+            background: #222;
             cursor: not-allowed;
             box-shadow: none;
         }
@@ -143,7 +153,7 @@
             margin-top: 15px;
             font-size: 1.2rem;
             font-weight: bold;
-            color: #ffaa00;
+            color: #fff;
             text-shadow: 0 0 5px #000;
             height: 25px;
         }
@@ -160,14 +170,15 @@
     <div class="header">
         <h1>Охота на Демонов</h1>
         <div class="stats">
-            <div>Очки: <span id="score">0</span></div>
-            <div>Печатей: <span id="traps">25</span></div>
+            <div class="stat-box">Раунд: <span id="round">1</span> / 3</div>
+            <div class="stat-box" style="color: #ffaa00;">Поймано: <span id="caught">0</span> / 20</div>
+            <div class="stat-box">Печатей: <span id="traps">25</span></div>
         </div>
     </div>
 
     <div class="board" id="board"></div>
 
-    <div id="message">Расставь демонические печати...</div>
+    <div id="message">Раунд 1. Расставь демонические печати...</div>
 
     <div class="controls">
         <button id="checkBtn" onclick="checkTraps()">Проверить!</button>
@@ -176,38 +187,43 @@
 
     <script>
         const boardSize = 10;
-        let board = [];
-        let traps = [];
-        let maxTraps = 25;
-        let score = 0;
-        let gamePhase = 'placement'; // 'placement' или 'revealed'
+        let board = []; // Состояния: 0 - пусто, 1 - демон, 2 - убит, 3 - промах
         
-        // Размеры демонов (как корабли: 1шт - 4х, 2шт - 3х, 3шт - 2х, 4шт - 1х)
+        let availableTraps = 25;
+        let roundTraps = []; // Индексы печатей, поставленных в ТЕКУЩЕМ раунде
+        let currentRound = 1;
+        let demonsCaught = 0;
+        const totalDemons = 20; // Сумма всех клеток демонов (4+3+3+2+2+2+1+1+1+1)
+        let isGameOver = false;
+        
         const demonSizes = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1];
 
         const boardElement = document.getElementById('board');
         const trapsElement = document.getElementById('traps');
-        const scoreElement = document.getElementById('score');
+        const caughtElement = document.getElementById('caught');
+        const roundElement = document.getElementById('round');
         const messageElement = document.getElementById('message');
         const checkBtn = document.getElementById('checkBtn');
         const restartBtn = document.getElementById('restartBtn');
 
         function initGame() {
             board = Array(boardSize * boardSize).fill(0);
-            traps = [];
-            score = 0;
-            gamePhase = 'placement';
+            availableTraps = 25;
+            roundTraps = [];
+            currentRound = 1;
+            demonsCaught = 0;
+            isGameOver = false;
             
-            trapsElement.innerText = maxTraps;
-            scoreElement.innerText = score;
-            messageElement.innerText = "Расставь демонические печати...";
+            updateUI();
+            messageElement.innerText = "Раунд 1. Расставь демонические печати...";
+            messageElement.style.color = "#fff";
+            
             checkBtn.style.display = "block";
-            checkBtn.disabled = true; // Выключена, пока нет печатей
+            checkBtn.innerText = "Проверить!";
+            checkBtn.disabled = true;
             restartBtn.style.display = "none";
             
             boardElement.innerHTML = '';
-            
-            // Создаем поле
             for (let i = 0; i < boardSize * boardSize; i++) {
                 const cell = document.createElement('div');
                 cell.classList.add('cell');
@@ -219,7 +235,6 @@
             placeDemons();
         }
 
-        // Проверка, можно ли поставить демона (чтобы они не соприкасались)
         function canPlace(index, size, isHorizontal) {
             let row = Math.floor(index / boardSize);
             let col = index % boardSize;
@@ -227,7 +242,6 @@
             if (isHorizontal && col + size > boardSize) return false;
             if (!isHorizontal && row + size > boardSize) return false;
 
-            // Проверяем сами клетки и клетки вокруг (правило Морского боя)
             for (let i = 0; i < size; i++) {
                 let r = row + (isHorizontal ? 0 : i);
                 let c = col + (isHorizontal ? i : 0);
@@ -245,7 +259,6 @@
             return true;
         }
 
-        // Случайная генерация врагов
         function placeDemons() {
             demonSizes.forEach(size => {
                 let placed = false;
@@ -267,82 +280,114 @@
             });
         }
 
-        // Установка/Снятие печати
+        // Ставим или убираем печать в ТЕКУЩЕМ раунде
         function toggleTrap(index) {
-            if (gamePhase !== 'placement') return;
+            if (isGameOver) return;
+            // Нельзя ставить на уже проверенные клетки
+            if (board[index] === 2 || board[index] === 3) return;
 
             const cell = boardElement.children[index];
-            const trapIndex = traps.indexOf(index);
+            const trapIndex = roundTraps.indexOf(index);
 
             if (trapIndex > -1) {
-                // Убираем печать
-                traps.splice(trapIndex, 1);
+                // Убираем неиспользованную печать
+                roundTraps.splice(trapIndex, 1);
+                availableTraps++;
                 cell.classList.remove('seal');
                 cell.innerText = "";
             } else {
-                // Ставим печать, если есть лимит
-                if (traps.length < maxTraps) {
-                    traps.push(index);
+                // Ставим печать, если они еще есть
+                if (availableTraps > 0) {
+                    roundTraps.push(index);
+                    availableTraps--;
                     cell.classList.add('seal');
-                    cell.innerText = "⛧"; // Символ печати
+                    cell.innerText = "⛧";
                 } else {
                     messageElement.innerText = "У тебя больше нет печатей!";
-                    setTimeout(() => messageElement.innerText = "Расставь демонические печати...", 1500);
+                    messageElement.style.color = "red";
+                    setTimeout(() => {
+                        if(!isGameOver) {
+                            messageElement.innerText = `Раунд ${currentRound}. Жми "Проверить!"`;
+                            messageElement.style.color = "#fff";
+                        }
+                    }, 1500);
                 }
             }
 
-            trapsElement.innerText = maxTraps - traps.length;
-            checkBtn.disabled = traps.length === 0;
+            updateUI();
+            checkBtn.disabled = roundTraps.length === 0;
         }
 
-        // Нажатие кнопки "Проверить"
+        // Проверка поставленных печатей
         function checkTraps() {
-            if (gamePhase !== 'placement' || traps.length === 0) return;
-            gamePhase = 'revealed';
+            if (isGameOver || roundTraps.length === 0) return;
             
-            let hits = 0;
+            let hitsThisRound = 0;
 
-            // Обрабатываем каждую ловушку
-            traps.forEach(index => {
+            // Обрабатываем только те печати, которые поставили в этом раунде
+            roundTraps.forEach(index => {
                 const cell = boardElement.children[index];
                 if (board[index] === 1) {
+                    board[index] = 2; // Убит
+                    cell.classList.remove('seal');
                     cell.classList.add('hit');
-                    cell.classList.remove('seal');
-                    cell.innerText = "👹"; // Пойманный демон
-                    score += 100;
-                    hits++;
-                    board[index] = 2; // Помечаем как уничтоженного
+                    cell.innerText = "👹";
+                    demonsCaught++;
+                    hitsThisRound++;
                 } else {
-                    cell.classList.add('miss');
+                    board[index] = 3; // Промах
                     cell.classList.remove('seal');
-                    cell.innerText = "💨"; // Промах (дым)
+                    cell.classList.add('miss');
+                    cell.innerText = "💨";
                 }
             });
 
-            // Показываем ненайденных демонов (тускло)
+            // Очищаем массив текущего раунда
+            roundTraps = [];
+            currentRound++;
+            updateUI();
+
+            // Проверяем условия окончания игры
+            if (demonsCaught === totalDemons) {
+                endGame("Победа! Все демоны изгнаны досрочно!", "#00ff00");
+            } else if (currentRound > 3) {
+                endGame(`Игра окончена! Ты поймал ${demonsCaught} из ${totalDemons} демонов.`, "#ffaa00");
+            } else if (availableTraps === 0) {
+                endGame(`Печати закончились! Ты поймал ${demonsCaught} из ${totalDemons}.`, "#ffaa00");
+            } else {
+                // Переход к следующему раунду
+                messageElement.innerText = `Попаданий: ${hitsThisRound}. Раунд ${currentRound}. Ставь еще!`;
+                messageElement.style.color = hitsThisRound > 0 ? "#ffaa00" : "#888";
+                checkBtn.disabled = true; // Отключаем кнопку, пока не поставят новые
+            }
+        }
+
+        function endGame(message, color) {
+            isGameOver = true;
+            messageElement.innerText = message;
+            messageElement.style.color = color;
+            
+            // Показываем ненайденных демонов
             for (let i = 0; i < boardSize * boardSize; i++) {
                 if (board[i] === 1) {
                     const cell = boardElement.children[i];
                     cell.classList.add('revealed-demon');
-                    cell.innerText = "👿"; // Скрывавшийся демон
+                    cell.innerText = "👿";
                 }
-            }
-
-            scoreElement.innerText = score;
-            
-            if (hits > 0) {
-                messageElement.innerText = `Печати сработали! Уничтожено демонов: ${hits}`;
-                messageElement.style.color = "#ffaa00";
-            } else {
-                messageElement.innerText = "Печати сгорели впустую... Никто не пойман.";
-                messageElement.style.color = "#888";
             }
 
             checkBtn.style.display = "none";
             restartBtn.style.display = "block";
         }
 
-        // Запуск при загрузке
+        function updateUI() {
+            trapsElement.innerText = availableTraps;
+            caughtElement.innerText = demonsCaught;
+            if (currentRound <= 3) {
+                roundElement.innerText = currentRound;
+            }
+        }
+
         window.onload = initGame;
     </script>
 </body>
