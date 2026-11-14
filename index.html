@@ -13,7 +13,7 @@
 
         body {
             margin: 0;
-            padding: 0;
+            padding: 20px;
             font-family: 'Courier New', Courier, monospace;
             background-image: url('bg.jpg'); 
             background-size: cover;
@@ -21,22 +21,79 @@
             background-attachment: fixed;
             color: #fff;
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            justify-content: center;
+            align-items: flex-start;
             min-height: 100vh;
             user-select: none;
+            box-sizing: border-box;
+        }
+
+        /* Главный контейнер для разделения на колонки */
+        .main-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            justify-content: center;
+            max-width: 1200px;
+            margin-top: 20px;
+        }
+
+        /* --- ЛЕВОЕ МЕНЮ (ПРАВИЛА) --- */
+        .sidebar {
+            background: var(--bg-overlay);
+            padding: 20px 30px;
+            border: 2px solid #551111;
+            border-radius: 10px;
+            width: 300px;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
+            height: fit-content;
+        }
+
+        .sidebar h2 {
+            color: var(--primary-color);
+            margin-top: 0;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #551111;
+            padding-bottom: 10px;
+            text-shadow: 0 0 5px #ff0000;
+            font-size: 1.2rem;
+        }
+
+        .sidebar ul {
+            padding-left: 20px;
+            line-height: 1.6;
+            font-size: 0.95rem;
+            color: #ddd;
+        }
+
+        .sidebar li {
+            margin-bottom: 12px;
+        }
+
+        .sidebar li span {
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        /* --- ИГРОВАЯ ЗОНА --- */
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .header {
             background: var(--bg-overlay);
-            padding: 15px 20px;
+            padding: 15px 20px 10px 20px;
             border-bottom: 2px solid var(--primary-color);
-            border-radius: 0 0 15px 15px;
+            border-radius: 10px;
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             box-shadow: 0 0 20px var(--primary-color);
-            width: 470px;
-            max-width: 95vw;
+            width: 100%;
+            max-width: 500px;
             box-sizing: border-box;
         }
 
@@ -51,23 +108,31 @@
 
         .stats {
             display: flex;
-            justify-content: space-around;
+            justify-content: center;
             align-items: center;
             gap: 15px;
-            font-size: 1.05rem;
+            font-size: 1rem;
             font-weight: bold;
         }
 
         .stat-box {
             background: rgba(0, 0, 0, 0.6);
-            padding: 8px 16px;
+            padding: 8px 15px;
             border-radius: 5px;
             border: 1px solid #551111;
             white-space: nowrap;
-            flex: 1;
-            text-align: center;
         }
 
+        .datetime {
+            margin-top: 15px;
+            font-size: 0.75rem;
+            color: #777;
+            font-family: monospace;
+            border-top: 1px dashed #331111;
+            padding-top: 8px;
+        }
+
+        /* --- ИГРОВОЕ ПОЛЕ И КЛЕТКИ --- */
         .board {
             display: grid;
             grid-template-columns: repeat(10, var(--cell-size));
@@ -122,6 +187,7 @@
             cursor: default;
         }
 
+        /* --- КНОПКИ И СООБЩЕНИЯ --- */
         .controls {
             margin-top: 25px;
             display: flex;
@@ -158,7 +224,7 @@
         }
 
         #message {
-            margin-top: 15px;
+            margin-top: 20px;
             font-size: 1.1rem;
             font-weight: bold;
             color: #fff;
@@ -172,33 +238,81 @@
             50% { transform: scale(1.2); }
             100% { transform: scale(1); }
         }
+
+        /* Адаптация для мобилок (чтобы меню уходило наверх или вниз) */
+        @media (max-width: 850px) {
+            .sidebar {
+                width: 100%;
+                max-width: 500px;
+            }
+            :root {
+                --cell-size: 35px; /* Уменьшаем клетки на телефонах */
+            }
+        }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>Охота на Демонов</h1>
-        <div class="stats">
-            <div class="stat-box" style="color: #ffaa00;">Поймано: <span id="caught">0</span>/20</div>
-            <div class="stat-box">Осталось печатей: <span id="traps">30</span></div>
-        </div>
-    </div>
+    <div class="main-container">
+        
+        <!-- ЛЕВОЕ МЕНЮ (ИНСТРУКЦИЯ) -->
+        <aside class="sidebar">
+            <h2>Памятка демонолога</h2>
+            <ul>
+                <li>На поле скрываются <span>20 демонов</span> разных размеров (от 1 до 4 клеток).</li>
+                <li>Демоны располагаются по правилам "Морского боя": горизонтально или вертикально, и <span>никогда не соприкасаются</span> друг с другом.</li>
+                <li>У тебя есть <span>30 печатей</span> для поиска.</li>
+                <li>Кликай по клеткам, чтобы установить печать ⛧.</li>
+                <li>Нажми <span>"ПРОВЕРИТЬ"</span>, чтобы активировать установленные ловушки.</li>
+                <li>👹 — Попадание!<br>💨 — Промах...</li>
+                <li>Ты можешь расставлять и проверять печати <span>в любой момент</span>, пока они не закончатся.</li>
+            </ul>
+        </aside>
 
-    <div class="board" id="board"></div>
+        <!-- ИГРОВАЯ ЗОНА -->
+        <main class="game-area">
+            <div class="header">
+                <h1>Охота на Демонов</h1>
+                <div class="stats">
+                    <div class="stat-box" style="color: #ffaa00;">Поймано: <span id="caught">0</span>/20</div>
+                    <div class="stat-box">Осталось печатей: <span id="traps">30</span></div>
+                </div>
+                <!-- Блок с датой и временем -->
+                <div class="datetime" id="datetime">Загрузка времени...</div>
+            </div>
 
-    <div id="message">Расставляй печати и жми "Проверить"</div>
+            <div class="board" id="board"></div>
 
-    <div class="controls">
-        <button id="checkBtn" onclick="checkTraps()">Проверить!</button>
-        <button id="restartBtn" onclick="initGame()" style="display: none;">Новая игра</button>
+            <div id="message">Расставляй печати и жми "Проверить"</div>
+
+            <div class="controls">
+                <button id="checkBtn" onclick="checkTraps()">Проверить!</button>
+                <button id="restartBtn" onclick="initGame()" style="display: none;">Новая игра</button>
+            </div>
+        </main>
     </div>
 
     <script>
+        // --- ЧАСЫ И ДАТА ---
+        function updateDateTime() {
+            const now = new Date();
+            const dateOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
+            const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+            
+            const dateStr = now.toLocaleDateString('ru-RU', dateOptions);
+            const timeStr = now.toLocaleTimeString('ru-RU', timeOptions);
+            
+            document.getElementById('datetime').innerText = `Местное время: ${dateStr} | ${timeStr}`;
+        }
+        setInterval(updateDateTime, 1000);
+        updateDateTime(); // Вызываем сразу, чтобы не ждать секунду
+
+        // --- ЛОГИКА ИГРЫ ---
         const boardSize = 10;
         let board = []; 
         
         let availableTraps = 30;
-        let activeTraps = []; // Индексы поставленных, но еще не проверенных печатей
+        let activeTraps = []; 
         let demonsCaught = 0;
         const totalDemons = 20; 
         let isGameOver = false;
@@ -287,20 +401,17 @@
 
         function toggleTrap(index) {
             if (isGameOver) return;
-            // Нельзя ставить печать на уже проверенные клетки (попал/промах)
             if (board[index] === 2 || board[index] === 3) return;
 
             const cell = boardElement.children[index];
             const trapIndex = activeTraps.indexOf(index);
 
             if (trapIndex > -1) {
-                // Убираем неиспользованную печать
                 activeTraps.splice(trapIndex, 1);
                 availableTraps++;
                 cell.classList.remove('seal');
                 cell.innerText = "";
             } else {
-                // Ставим печать, если есть запасы
                 if (availableTraps > 0) {
                     activeTraps.push(index);
                     availableTraps--;
@@ -330,21 +441,21 @@
             activeTraps.forEach(index => {
                 const cell = boardElement.children[index];
                 if (board[index] === 1) {
-                    board[index] = 2; // Попадание
+                    board[index] = 2; 
                     cell.classList.remove('seal');
                     cell.classList.add('hit');
                     cell.innerText = "👹";
                     demonsCaught++;
                     hitsThisCheck++;
                 } else {
-                    board[index] = 3; // Промах
+                    board[index] = 3; 
                     cell.classList.remove('seal');
                     cell.classList.add('miss');
                     cell.innerText = "💨";
                 }
             });
 
-            activeTraps = []; // Очищаем список поставленных печатей
+            activeTraps = []; 
             updateUI();
 
             if (demonsCaught === totalDemons) {
@@ -363,7 +474,6 @@
             messageElement.innerText = message;
             messageElement.style.color = color;
             
-            // Вскрываем всех остававшихся демонов
             for (let i = 0; i < boardSize * boardSize; i++) {
                 if (board[i] === 1) {
                     const cell = boardElement.children[i];
