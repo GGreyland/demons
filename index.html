@@ -352,11 +352,11 @@
                     <ul>
                         <li>На поле скрываются <span>20 демонов</span> разных размеров (1шт-4кл, 2шт-3кл, 3шт-2кл, 4шт-1кл).</li>
                         <li>Они располагаются по правилам "Морского боя": по прямой линии, и <span>никогда не соприкасаются</span> друг с другом.</li>
-                        <li>У тебя есть <span>30 печатей</span> для поиска.</li>
+                        <li>У тебя есть <span>50 ловушек</span> для поиска.</li>
                         <li>Кликай по клеткам, чтобы установить печать ⛧.</li>
                         <li>Нажми <span>"ПРОВЕРИТЬ"</span>, чтобы активировать установленные ловушки.</li>
                         <li>👹 — Попадание!<br>💨 — Промах...</li>
-                        <li>Ты можешь расставлять и проверять печати <span>в любой момент</span> (по одной или сразу несколько), пока они не закончатся.</li>
+                        <li>Ты можешь расставлять и проверять ловушки <span>в любой момент</span> (по одной или сразу несколько), пока они не закончатся.</li>
                     </ul>
                 </div>
                 <!-- Кнопка для сворачивания -->
@@ -372,7 +372,7 @@
                 <h1>Охота на Демонов</h1>
                 <div class="stats">
                     <div class="stat-box" style="color: #ffaa00;">Поймано: <span id="caught">0</span>/20</div>
-                    <div class="stat-box">Осталось печатей: <span id="traps">30</span></div>
+                    <div class="stat-box">Осталось ловушек: <span id="traps">30</span></div>
                 </div>
                 <!-- Только дата без лишних слов -->
                 <div class="datetime" id="datetime">Загрузка...</div>
@@ -380,10 +380,10 @@
 
             <div class="board" id="board"></div>
 
-            <div id="message">Расставляй печати и жми "Проверить"</div>
+            <div id="message">Расставляй ловушки и жми "Проверить"</div>
 
             <div class="controls">
-                <button id="checkBtn" onclick="checkTraps()">Проверить!</button>
+                <button id="checkBtn" onclick="checkTraps()">Проверить</button>
                 <button id="restartBtn" onclick="initGame()" style="display: none;">Новая игра</button>
             </div>
         </main>
@@ -432,17 +432,17 @@
 
         function initGame() {
             board = Array(boardSize * boardSize).fill(0);
-            availableTraps = 30;
+            availableTraps = 50;
             activeTraps = [];
             demonsCaught = 0;
             isGameOver = false;
             
             updateUI();
-            messageElement.innerText = "Расставляй печати и жми \"Проверить\"";
+            messageElement.innerText = "Расставляй ловушки и жми \"Проверить\"";
             messageElement.style.color = "#fff";
             
             checkBtn.style.display = "block";
-            checkBtn.innerText = "Проверить!";
+            checkBtn.innerText = "Проверить";
             checkBtn.disabled = true;
             restartBtn.style.display = "none";
             
@@ -522,11 +522,11 @@
                     cell.classList.add('seal');
                     cell.innerText = "⛧";
                 } else {
-                    messageElement.innerText = "У тебя кончились печати!";
+                    messageElement.innerText = "У тебя кончились пловушки!";
                     messageElement.style.color = "#ff3333";
                     setTimeout(() => {
                         if(!isGameOver) {
-                            messageElement.innerText = "Жми \"Проверить!\"";
+                            messageElement.innerText = "Жми \"Проверить\"";
                             messageElement.style.color = "#fff";
                         }
                     }, 1500);
@@ -565,7 +565,7 @@
             if (demonsCaught === totalDemons) {
                 endGame("Победа! Все демоны пойманы!", "#00ff00");
             } else if (availableTraps === 0) {
-                endGame(`Печати закончились! Ты поймал ${demonsCaught} из ${totalDemons} демонов.`, "#ff3333");
+                endGame(`Ловушки закончились! Поймано ${demonsCaught} из ${totalDemons} демонов.`, "#ff3333");
             } else {
                 messageElement.innerText = `Уничтожено: +${hitsThisCheck}! Расставляй дальше.`;
                 messageElement.style.color = hitsThisCheck > 0 ? "#ffaa00" : "#aaa";
