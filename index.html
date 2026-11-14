@@ -49,23 +49,22 @@
             border: 2px solid #551111;
             border-radius: 10px;
             width: 360px;
-            height: 100%; /* Занимает 100% высоты колонки (равной высоте игры) */
+            height: 100%; /* Занимает 100% высоты колонки */
             transition: width 0.3s ease-in-out;
             overflow: hidden;
             position: relative;
             box-sizing: border-box;
         }
 
-        /* Оболочка текста, чтобы он не сжимался уродливо при анимации */
         .sidebar-content {
-            width: 320px; /* 360px общая ширина - 40px кнопка */
+            width: 320px; 
             padding: 15px 15px 15px 20px;
             box-sizing: border-box;
             transition: opacity 0.2s ease;
         }
 
         .sidebar.collapsed {
-            width: 40px; /* Оставляем только полоску с кнопкой */
+            width: 40px; 
         }
 
         .sidebar.collapsed .sidebar-content {
@@ -102,7 +101,7 @@
             font-weight: bold;
         }
 
-        /* Кнопка сворачивания (полоска справа от правил) */
+        /* Кнопка сворачивания */
         .toggle-btn {
             position: absolute;
             top: 0;
@@ -132,18 +131,16 @@
             transition: transform 0.3s ease;
         }
 
-        /* Поворот стрелочки, когда свернуто */
         .sidebar.collapsed .toggle-btn span {
             transform: rotate(180deg);
         }
-
 
         /* --- ЦЕНТРАЛЬНАЯ КОЛОНКА (ИГРОВАЯ ЗОНА) --- */
         .game-area {
             display: flex;
             flex-direction: column;
             align-items: center;
-            height: fit-content; /* Диктует высоту всей сетке */
+            height: fit-content; 
         }
 
         .header {
@@ -187,8 +184,8 @@
 
         .datetime {
             margin-top: 10px;
-            font-size: 0.75rem;
-            color: #777;
+            font-size: 0.8rem;
+            color: #888;
             font-family: monospace;
             border-top: 1px dashed #331111;
             padding-top: 6px;
@@ -304,7 +301,7 @@
             100% { transform: scale(1); }
         }
 
-        /* Адаптация для экранов, где правила не влезают слева */
+        /* Адаптация для экранов */
         @media (max-width: 1100px) {
             .main-container {
                 grid-template-columns: 1fr;
@@ -333,7 +330,7 @@
                 border-bottom: 1px solid #551111;
             }
             .sidebar.collapsed .toggle-btn span {
-                transform: rotate(90deg); /* На мобилке стрелка смотрит вниз */
+                transform: rotate(90deg); 
             }
             .toggle-btn span {
                 transform: rotate(-90deg);
@@ -362,7 +359,7 @@
                         <li>Ты можешь расставлять и проверять печати <span>в любой момент</span> (по одной или сразу несколько), пока они не закончатся.</li>
                     </ul>
                 </div>
-                <!-- Вертикальная кнопка для сворачивания -->
+                <!-- Кнопка для сворачивания -->
                 <button class="toggle-btn" onclick="toggleSidebar()">
                     <span id="toggle-icon">❮</span>
                 </button>
@@ -377,7 +374,8 @@
                     <div class="stat-box" style="color: #ffaa00;">Поймано: <span id="caught">0</span>/20</div>
                     <div class="stat-box">Осталось печатей: <span id="traps">30</span></div>
                 </div>
-                <div class="datetime" id="datetime">Загрузка времени...</div>
+                <!-- Только дата без лишних слов -->
+                <div class="datetime" id="datetime">Загрузка...</div>
             </div>
 
             <div class="board" id="board"></div>
@@ -402,19 +400,16 @@
             sidebar.classList.toggle('collapsed');
         }
 
-        // --- ЧАСЫ И ДАТА ---
-        function updateDateTime() {
+        // --- ТОЛЬКО ДАТА ---
+        function updateDate() {
             const now = new Date();
             const dateOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
-            const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
-            
-            const dateStr = now.toLocaleDateString('ru-RU', dateOptions);
-            const timeStr = now.toLocaleTimeString('ru-RU', timeOptions);
-            
-            document.getElementById('datetime').innerText = `Местное время: ${dateStr} | ${timeStr}`;
+            // Выведет только дату, например: 14.10.2023
+            document.getElementById('datetime').innerText = now.toLocaleDateString('ru-RU', dateOptions);
         }
-        setInterval(updateDateTime, 1000);
-        updateDateTime(); 
+        // Запускаем обновление раз в минуту
+        setInterval(updateDate, 60000);
+        updateDate(); 
 
         // --- ЛОГИКА ИГРЫ ---
         const boardSize = 10;
