@@ -352,11 +352,11 @@
                     <ul>
                         <li>На поле скрываются <span>20 демонов</span> разных размеров (1шт-4кл, 2шт-3кл, 3шт-2кл, 4шт-1кл).</li>
                         <li>Они располагаются по правилам "Морского боя": по прямой линии, и <span>никогда не соприкасаются</span> друг с другом.</li>
-                        <li>У тебя есть <span>50 ловушек</span> для поиска.</li>
-                        <li>Кликай по клеткам, чтобы установить печать ⛧.</li>
-                        <li>Нажми <span>"ПРОВЕРИТЬ"</span>, чтобы активировать установленные ловушки.</li>
+                        <li>У вас есть <span>50 ловушек</span> для поиска.</li>
+                        <li>Кликайте по клеткам, чтобы установить ловушки ⛧.</li>
+                        <li>Нажмите <span>"ПРОВЕРИТЬ"</span>, чтобы активировать установленные ловушки.</li>
                         <li>👹 — Попадание!<br>💨 — Промах...</li>
-                        <li>Ты можешь расставлять и проверять ловушки <span>в любой момент</span> (по одной или сразу несколько), пока они не закончатся.</li>
+                        <li>Вы можете расставлять и проверять ловушки <span>в любой момент</span> (по одной или сразу несколько), пока они не закончатся.</li>
                     </ul>
                 </div>
                 <!-- Кнопка для сворачивания -->
@@ -380,7 +380,7 @@
 
             <div class="board" id="board"></div>
 
-            <div id="message">Расставляй ловушки и жми "Проверить"</div>
+            <div id="message">Расставляйте ловушки и жмите "Проверить"</div>
 
             <div class="controls">
                 <button id="checkBtn" onclick="checkTraps()">Проверить</button>
@@ -438,7 +438,7 @@
             isGameOver = false;
             
             updateUI();
-            messageElement.innerText = "Расставляй ловушки и жми \"Проверить\"";
+            messageElement.innerText = "Расставляйте ловушки и жмите \"Проверить\"";
             messageElement.style.color = "#fff";
             
             checkBtn.style.display = "block";
@@ -522,11 +522,11 @@
                     cell.classList.add('seal');
                     cell.innerText = "⛧";
                 } else {
-                    messageElement.innerText = "У тебя кончились пловушки!";
+                    messageElement.innerText = "У Вас не осталось ловушек!";
                     messageElement.style.color = "#ff3333";
                     setTimeout(() => {
                         if(!isGameOver) {
-                            messageElement.innerText = "Жми \"Проверить\"";
+                            messageElement.innerText = "Жмите \"Проверить\"";
                             messageElement.style.color = "#fff";
                         }
                     }, 1500);
@@ -567,7 +567,7 @@
             } else if (availableTraps === 0) {
                 endGame(`Ловушки закончились! Поймано ${demonsCaught} из ${totalDemons} демонов.`, "#ff3333");
             } else {
-                messageElement.innerText = `Уничтожено: +${hitsThisCheck}! Расставляй дальше.`;
+                messageElement.innerText = `Поймано: +${hitsThisCheck}! Расставляйте дальше.`;
                 messageElement.style.color = hitsThisCheck > 0 ? "#ffaa00" : "#aaa";
                 checkBtn.disabled = true;
             }
